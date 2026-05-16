@@ -1,7 +1,3 @@
-# ============================================================
-#  bullet.py  –  Bullet entity (shared by player & enemies)
-# ============================================================
-
 import math
 import pygame
 from settings import SCREEN_WIDTH, SCREEN_HEIGHT, YELLOW, ORANGE
@@ -43,13 +39,11 @@ class Bullet:
         pygame.draw.rect(self.image, bullet_color,
                          (0, 0, self.BULLET_W, self.BULLET_H))
 
-    # ------------------------------------------------------------------
-
     def update(self) -> None:
         self.x += self.dx * self.speed
         self.y += self.dy * self.speed
 
-        # Pantulan dari tepi layar (hanya sekali)
+        # Pantulan dari tepi layar
         if self.bouncing and not self.bounced:
             hit_wall = False
             if self.x < 0 or self.x > SCREEN_WIDTH:

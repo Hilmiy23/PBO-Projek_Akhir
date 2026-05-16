@@ -1,15 +1,12 @@
-# ============================================================
-#  enemy.py  –  Enemy entity + Boss subclass
-# ============================================================
-
 import math
 import random
 import pygame
 from settings import *
 from bullet import Bullet
+from entity import Entity
 
 
-class Enemy:
+class Enemy(Entity):
     """
     A basic enemy that chases the player.
 
@@ -33,16 +30,13 @@ class Enemy:
         shoot_cd_max: int = 0,
         bullet_speed: float = 0.0,
     ):
-        self.x       = float(x)
-        self.y       = float(y)
-        self.speed   = speed
-        self.hp      = hp
-        self.max_hp  = hp
-        self.damage  = damage
-        self.color   = color
-        self.radius  = radius
-        self.alive   = True
-        self.angle   = 0.0   # visual facing direction
+        super().__init__(x, y, radius)
+        self._speed   = speed
+        self._hp      = hp
+        self._max_hp  = hp
+        self._damage  = damage
+        self._color   = color
+        self.angle    = 0.0   # visual facing direction
 
         self.shoot_cd_max = shoot_cd_max
         self.shoot_cd     = random.randint(0, max(1, shoot_cd_max))
@@ -56,7 +50,25 @@ class Enemy:
         self.image = pygame.Surface((self.radius * 2, self.radius * 2), pygame.SRCALPHA)
         pygame.draw.rect(self.image, self.color, (0, 0, self.radius * 2, self.radius * 2))
 
-    # ------------------------------------------------------------------
+    @property
+    def hp(self) -> int:
+        return self._hp
+
+    @property
+    def max_hp(self) -> int:
+        return self._max_hp
+
+    @property
+    def damage(self) -> int:
+        return self._damage
+
+    @property
+    def color(self) -> tuple:
+        return self._color
+
+    @property
+    def speed(self) -> float:
+        return self._speed
 
     def update(self, px: float, py: float) -> None:
         # Move toward player
@@ -65,8 +77,8 @@ class Enemy:
         if dist > 0:
             self.angle = math.atan2(dy, dx)
             nx, ny     = dx / dist, dy / dist
-            self.x    += nx * self.speed
-            self.y    += ny * self.speed
+            self._x    += nx * self._speed
+            self._y    += ny * self._speed
 
         # Shoot
         if self.shoot_cd_max > 0:
@@ -87,8 +99,8 @@ class Enemy:
         nx, ny = dx / dist, dy / dist
         self.bullets.append(
             Bullet(
-                self.x + nx * (self.radius + 6),
-                self.y + ny * (self.radius + 6),
+                self._x + nx * (self.radius + 6),
+                self._y + ny * (self.radius + 6),
                 nx, ny,
                 self.bullet_speed, self.damage,
                 ORANGE, 5, "enemy",
@@ -96,12 +108,10 @@ class Enemy:
         )
 
     def take_damage(self, dmg: int) -> None:
-        self.hp -= dmg
-        if self.hp <= 0:
-            self.hp    = 0
-            self.alive = False
-
-    # ------------------------------------------------------------------
+        self._hp -= dmg
+        if self._hp <= 0:
+            self._hp    = 0
+            self._alive = False
 
     def draw(self, surface: pygame.Surface) -> None:
         ix, iy = int(self.x), int(self.y)
@@ -123,9 +133,6 @@ class Enemy:
         # Bullets
         for b in self.bullets:
             b.draw(surface)
-
-
-# ======================================================================
 
 
 class Boss(Enemy):
@@ -159,8 +166,6 @@ class Boss(Enemy):
         self.image = pygame.Surface((self.radius * 2, self.radius * 2), pygame.SRCALPHA)
         pygame.draw.rect(self.image, PURPLE, (0, 0, self.radius * 2, self.radius * 2))
 
-    # ------------------------------------------------------------------
-
     def update(self, px: float, py: float) -> None:
         self._phase_tick += 1
 
@@ -188,8 +193,8 @@ class Boss(Enemy):
                 move_ang = base_angle
                 spd      = self.speed
 
-            self.x += math.cos(move_ang) * spd
-            self.y += math.sin(move_ang) * spd
+            self._x += math.cos(move_ang) * spd
+            self._y += math.sin(move_ang) * spd
 
         # Shooting
         if self.shoot_cd <= 0:
@@ -211,24 +216,22 @@ class Boss(Enemy):
             ang = base + offset
             self.bullets.append(
                 Bullet(
-                    self.x, self.y,
+                    self._x, self._y,
                     math.cos(ang), math.sin(ang),
                     self.bullet_speed, self.damage,
                     RED, 7, "enemy",
                 )
             )
 
-    # ------------------------------------------------------------------
-
     def draw(self, surface: pygame.Surface) -> None:
         ix, iy = int(self.x), int(self.y)
 
-        # Sprite boss (rotasi mengikuti arah gerak)
+        # Sprite boss
         rotated = pygame.transform.rotate(self.image, -math.degrees(self.angle))
         rect    = rotated.get_rect(center=(ix, iy))
         surface.blit(rotated, rect.topleft)
 
-        # HP bar di atas boss
+        # HP bar boss
         bw = self.radius * 5
         bx = ix - bw // 2
         by = iy - self.radius - 18

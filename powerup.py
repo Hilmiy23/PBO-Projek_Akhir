@@ -1,7 +1,3 @@
-# ============================================================
-#  powerup.py  –  Collectible power-up drops
-# ============================================================
-
 import math
 import random
 import pygame
@@ -49,8 +45,6 @@ class PowerUp:
         self.timer  = self.LIFETIME
         self._bob   = 0.0   # sin phase for bobbing animation
 
-    # ------------------------------------------------------------------
-
     def update(self) -> None:
         self._bob += 0.08
         self.timer -= 1
@@ -90,8 +84,6 @@ class PowerUp:
                           (255, 255, 255, fade) if fade < 200 else WHITE)
         surface.blit(txt, (ix - txt.get_width() // 2,
                            iy - txt.get_height() // 2))
-
-    # ------------------------------------------------------------------
 
     def collides_with(self, px: float, py: float, pr: float) -> bool:
         return math.hypot(self.x - px, self.y - py) < self.radius + pr

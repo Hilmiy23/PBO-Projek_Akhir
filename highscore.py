@@ -1,7 +1,3 @@
-# ============================================================
-#  highscore.py  –  Persistent high-score via JSON file
-# ============================================================
-
 import json
 import os
 from settings import HIGHSCORE_FILE

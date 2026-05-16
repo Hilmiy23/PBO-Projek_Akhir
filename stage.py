@@ -1,7 +1,3 @@
-# ============================================================
-#  stage.py  –  Stage configuration & enemy spawning logic
-# ============================================================
-
 import random
 import math
 from settings import *

@@ -1,25 +1,19 @@
-# ============================================================
-#  player.py  –  Player entity with movement, shooting & HUD
-# ============================================================
-
 import math
 import pygame
 from settings import *
 from bullet import Bullet
+from entity import Entity
 
 
-class Player:
+class Player(Entity):
     POWERUP_DURATION = 360   # 6 s at 60 fps
 
     def __init__(self, x: float, y: float):
-        self.x      = float(x)
-        self.y      = float(y)
-        self.radius = PLAYER_RADIUS
-        self.speed  = float(PLAYER_SPEED)
-        self.hp     = PLAYER_HP
-        self.max_hp = PLAYER_HP
-        self.alive  = True
-        self.angle  = 0.0
+        super().__init__(x, y, PLAYER_RADIUS)
+        self._speed  = float(PLAYER_SPEED)
+        self._hp     = PLAYER_HP
+        self._max_hp = PLAYER_HP
+        self.angle   = 0.0
 
         self.shoot_cd     = 0
         self.shoot_cd_max = PLAYER_SHOOT_COOLDOWN
@@ -31,11 +25,23 @@ class Player:
         self.speed_boost_timer = 0
         self.shield_timer      = 0
 
-        # Roguelike skill tracker: {skill_id: stack_count}
+        # Skill tracker: {skill_id: stack_count}
         self.skills: dict[str, int] = {}
 
         self.image = pygame.Surface((self.radius * 2, self.radius * 2), pygame.SRCALPHA)
         pygame.draw.rect(self.image, BLUE, (0, 0, self.radius * 2, self.radius * 2))
+
+    @property
+    def hp(self) -> int:
+        return self._hp
+
+    @property
+    def max_hp(self) -> int:
+        return self._max_hp
+
+    @property
+    def speed(self) -> float:
+        return self._speed
 
     # ------------------------------------------------------------------
     # Properties
@@ -66,10 +72,10 @@ class Player:
             self.shoot_cd_max = max(4, PLAYER_SHOOT_COOLDOWN - stack * 2)
         elif skill_id == "speed_up":
             # Reset ke base lalu tambah per stack
-            self.speed = PLAYER_SPEED + stack * 0.8
+            self._speed = PLAYER_SPEED + stack * 0.8
         elif skill_id == "max_hp_up":
-            self.max_hp += 3
-            self.hp = min(self.hp + 3, self.max_hp)
+            self._max_hp += 3
+            self._hp = min(self._hp + 3, self._max_hp)
         # Skill lain ditangani secara dinamis saat digunakan:
         # damage_up → try_shoot
         # double_shot / triple_shot → try_shoot
@@ -94,11 +100,11 @@ class Player:
             mag = math.hypot(dx, dy)
             dx, dy = dx / mag * spd, dy / mag * spd
 
-        self.x = max(self.radius, min(SCREEN_WIDTH  - self.radius, self.x + dx))
-        self.y = max(self.radius, min(SCREEN_HEIGHT - self.radius, self.y + dy))
+        self._x = max(self.radius, min(SCREEN_WIDTH  - self.radius, self._x + dx))
+        self._y = max(self.radius, min(SCREEN_HEIGHT - self.radius, self._y + dy))
 
         mx, my = pygame.mouse.get_pos()
-        self.angle = math.atan2(my - self.y, mx - self.x)
+        self.angle = math.atan2(my - self._y, mx - self._x)
 
     # ------------------------------------------------------------------
     # Shooting
@@ -141,11 +147,11 @@ class Player:
     def take_damage(self, damage: int) -> None:
         if self.invincible > 0 or self.has_shield:
             return
-        self.hp -= damage
+        self._hp -= damage
         self.invincible = 70
-        if self.hp <= 0:
-            self.hp    = 0
-            self.alive = False
+        if self._hp <= 0:
+            self._hp    = 0
+            self._alive = False
 
     def apply_powerup(self, kind: str) -> None:
         dur = self.POWERUP_DURATION
@@ -158,7 +164,7 @@ class Player:
             mult = 3 if "shield_up" in self.skills else 1
             self.shield_timer = dur * mult
         elif kind == "health":
-            self.hp = min(self.hp + 2, self.max_hp)
+            self._hp = min(self._hp + 2, self._max_hp)
 
     # ------------------------------------------------------------------
     # Update
